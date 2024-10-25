@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listePatient, ajouterPatient, updatePatients } from '../service/PatientService';
+import { listeMedecins, ajouterMedecins, updateMedecins } from '../service/MedecinService';
 import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -10,24 +10,26 @@ import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import Pagination from 'react-bootstrap/Pagination';
 import './Table.css';
 
-const ListePatientsComponent = () => {
-    const [patients, setPatients] = useState([]);
+const ListeMedecinComponent = () => {
+    const [medecin, setMedecin] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [nom, setNom] = useState('');
     const [email, setEmail] = useState('');
-    const [currentPatientId, setCurrentPatientId] = useState(null);
+    const [specialite, setSpecialite] = useState('');
+    const [currentMedecinId, setCurrentMedecinId] = useState(null);
     const [errors, setErrors] = useState({
         nom: '',
-        email: ''
+        email: '',
+        specialite: ''
     });
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const patientsPerPage = 10;
+    const medecinPerPage = 10;
 
     useEffect(() => {
-        listePatient().then((response) => {
-            setPatients(response.data);
+        listeMedecins().then((response) => {
+            setMedecin(response.data);
         }).catch(error => {
             console.log(error);
         });
@@ -35,42 +37,43 @@ const ListePatientsComponent = () => {
 
     const handleClose = () => {
         setShowModal(false);
-        setCurrentPatientId(null);
+        setCurrentMedecinId(null);
         setNom('');
         setEmail('');
+        setSpecialite('');
     };
 
     const handleShow = () => setShowModal(true);
-
     const handleNomChange = (e) => setNom(e.target.value);
     const handleEmailChange = (e) => setEmail(e.target.value);
+    const handleSpecialiteChange = (e) => setSpecialite(e.target.value);
 
-    const savePatient = (e) => {
+    const saveMedecins = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            const patientData = { nom, email };
+            const medecinData = { nom, email, specialite };
 
-            if (currentPatientId) {
-                updatePatients(currentPatientId, patientData)
+            if (currentMedecinId) {
+                updateMedecins(currentMedecinId, medecinData)
                     .then(() => {
-                        const updatedPatients = patients.map((patient) =>
-                            patient.id === currentPatientId ? { ...patient, nom, email } : patient
+                        const updatedMedecins = medecin.map((m) =>
+                            m.id === currentMedecinId ? { ...m, nom, email, specialite } : m
                         );
-                        setPatients(updatedPatients);
-                        setToastMessage('Patient modifié avec succès !');
+                        setMedecin(updatedMedecins);
+                        setToastMessage('Médecin modifié avec succès !');
                         setShowToast(true);
                         handleClose();
                     })
                     .catch(error => console.error('Erreur lors de la mise à jour :', error));
             } else {
-                ajouterPatient(patientData)
+                ajouterMedecins(medecinData)
                     .then((response) => {
-                        setPatients([...patients, response.data]);
-                        setToastMessage('Patient ajouté avec succès !');
+                        setMedecin([...medecin, response.data]);
+                        setToastMessage('Médecin ajouté avec succès !');
                         setShowToast(true);
                         handleClose();
                     })
-                    .catch(error => console.error('Erreur lors de l\'ajout du patient :', error));
+                    .catch(error => console.error('Erreur lors de l\'ajout du médecin :', error));
             }
         }
     };
@@ -84,35 +87,44 @@ const ListePatientsComponent = () => {
             errorsCopy.nom = 'Le nom est requis';
             valid = false;
         }
+
         if (email.trim()) {
             errorsCopy.email = '';
         } else {
             errorsCopy.email = 'L\'email est requis';
             valid = false;
         }
+
+        if (specialite.trim()) {
+            errorsCopy.specialite = '';
+        } else {
+            errorsCopy.specialite = 'La spécialité est requise';
+            valid = false;
+        }
         setErrors(errorsCopy);
         return valid;
     }
 
-    const updatePatientForm = (patient) => {
-        setNom(patient.nom);
-        setEmail(patient.email);
-        setCurrentPatientId(patient.id);
+    const updateMedecinForm = (medecin) => {
+        setNom(medecin.nom);
+        setEmail(medecin.email);
+        setSpecialite(medecin.specialite);
+        setCurrentMedecinId(medecin.id);
         setShowModal(true);
     };
 
     const pageTitle = () => {
-        return currentPatientId ? <h2 className='text-center'>Modifier un patient</h2> : <h2 className='text-center'>Ajouter un patient</h2>;
+        return currentMedecinId ? <h2 className='text-center'>Modifier un médecin</h2> : <h2 className='text-center'>Ajouter un médecin</h2>;
     };
 
     // Pagination logic
-    const indexOfLastPatient = currentPage * patientsPerPage;
-    const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
-    const currentPatients = patients.slice(indexOfFirstPatient, indexOfLastPatient);
+    const indexOfLastMedecin = currentPage * medecinPerPage;
+    const indexOfFirstMedecin = indexOfLastMedecin - medecinPerPage;
+    const currentMedecins = medecin.slice(indexOfFirstMedecin, indexOfLastMedecin);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    const totalPages = Math.ceil(patients.length / patientsPerPage);
+    const totalPages = Math.ceil(medecin.length / medecinPerPage);
     const paginationItems = [];
     for (let number = 1; number <= totalPages; number++) {
         paginationItems.push(
@@ -124,9 +136,9 @@ const ListePatientsComponent = () => {
 
     return (
         <div className="table-container">
-            <h2>Liste des Patients</h2>
+            <h2>Liste des Médecins</h2>
             <Button variant="primary" className="float-start me-3 mb-3" onClick={handleShow}>
-                Ajouter Un Patient
+                Ajouter Un Médecin
             </Button>
             <Table striped bordered hover variant="gray">
                 <thead>
@@ -134,17 +146,19 @@ const ListePatientsComponent = () => {
                         <th>N°</th>
                         <th>Nom</th>
                         <th>Email</th>
+                        <th>Spécialité</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {currentPatients.map((patient, index) => (
-                        <tr key={patient.id}>
-                            <td>{index + 1 + indexOfFirstPatient}</td>
-                            <td>{patient.nom}</td>
-                            <td>{patient.email}</td>
+                    {currentMedecins.map((medecin, index) => (
+                        <tr key={medecin.id}>
+                            <td>{index + 1 + indexOfFirstMedecin}</td>
+                            <td>{medecin.nom}</td>
+                            <td>{medecin.email}</td>
+                            <td>{medecin.specialite}</td>
                             <td>
-                                <button className='btn btn me-2' onClick={() => updatePatientForm(patient)}>
+                                <button className='btn btn me-2' onClick={() => updateMedecinForm(medecin)}>
                                     <FontAwesomeIcon icon={faEdit} className='me-1' />
                                 </button>
                             </td>
@@ -187,13 +201,31 @@ const ListePatientsComponent = () => {
                                 required
                                 className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                             />
+                            {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
                         </Form.Group>
                         {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Spécialité</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Entrez la spécialité"
+                                value={specialite}
+                                onChange={handleSpecialiteChange}
+                                required
+                                className={`form-control ${errors.specialite ? 'is-invalid' : ''}`}
+                            />
+
+                        </Form.Group>
+                        {errors.specialite && <div className='invalid-feedback'>{errors.specialite}</div>}
+                        {/* <Button variant="primary" onClick={saveMedecins}>
+                            Enregistrer
+                        </Button> */}
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="primary" type="submit" onClick={savePatient}>
-                        {currentPatientId ? 'Modifier' : 'Sauvegarder'}
+                    <Button variant="primary" type="submit" onClick={saveMedecins}>
+                        {currentMedecinId ? 'Modifier' : 'Sauvegarder'}
                     </Button>
                     <Button variant="secondary" onClick={handleClose}>
                         Fermer
@@ -221,4 +253,4 @@ const ListePatientsComponent = () => {
     );
 };
 
-export default ListePatientsComponent;
+export default ListeMedecinComponent;

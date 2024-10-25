@@ -8,14 +8,9 @@ export const HeaderComponent = () => {
     return (
         <>
             <header>
-                <Navbar bg="dark" data-bs-theme="dark">
+                <Navbar bg="" data-bs-theme="">
                     <Container>
-                        <Navbar.Brand href="#home">Navbar</Navbar.Brand>
-                        <Nav className="me-auto">
-                            <Nav.Link href="#home">Home</Nav.Link>
-                            <Nav.Link href="#features">Features</Nav.Link>
-                            <Nav.Link href="#pricing">Pricing</Nav.Link>
-                        </Nav>
+                    <h1 >Gestion Des Rendez Vous d'Hopital</h1>
                     </Container>
                 </Navbar>
             </header>

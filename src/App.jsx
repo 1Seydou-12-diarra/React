@@ -4,21 +4,32 @@ import ListePatientsComponent from './component/ListePatientsComponent';
 import { HeaderComponent } from './component/HeaderComponent';
 import { FooterComponent } from './component/FooterComponent';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import HomeComponent from './component/HomeComponent';
+import ListeMedecinComponent from './component/ListeMedecinComponent';
+import RendezVousComponent from './component/RendezVousComponent';
 
 function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <>
-      <BrowserRouter>
+    <BrowserRouter>
+      <div style={{ marginLeft: '250px' }}>
         <HeaderComponent />
+        <Sidebar />
         <Routes>
-          <Route path='/' element={<ListePatientsComponent />} />
+          {/* <Route path='/' element={<ListePatientsComponent />} /> */}
           <Route path='/patient' element={<ListePatientsComponent />} />
+          <Route path='/medecin' element={<ListeMedecinComponent />} />
+          <Route path='/rendezVous' element={<RendezVousComponent />} />
+
+          <Route path='/home' element={<HomeComponent />} />
+          {/* Fallback route for unmatched paths */}
+          <Route path="*" element={<div>Page non trouvée</div>} />
         </Routes>
-        <FooterComponent />
-      </BrowserRouter>
-    </>
+        {/* <FooterComponent /> */}
+      </div>
+    </BrowserRouter>
   );
 }
 

@@ -1,7 +1,7 @@
 .table-container {
-    width: 82%;
+    width: 80%;
     position: absolute; /* Positionne l'élément de manière absolue */
     top: 200px; /* Distance depuis le haut de la page */
-    left: 50%; /* Centre horizontalement */
-    transform: translateX(-50%); /* Ajuste pour centrer par rapport à la largeur de l'élément */
+    left: 300px; /* Ajustez cette valeur pour décaler vers la droite */
+    transform: translateX(0); /* Aucune translation nécessaire */
 }

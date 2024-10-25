@@ -16,3 +16,47 @@ body {
   box-sizing: border-box;
   /* Pour inclure le padding dans la taille totale */
 }
+/* Sidebar.css */
+.sidebar {
+  height: calc(100vh - 60px); /* Ajuste la hauteur pour prendre en compte le header */
+  width: 250px;  /* Largeur de la sidebar */
+  background-color: #000; /* Couleur de fond totalement noir */
+  padding-top: 20px;
+  color: white;
+  position: absolute; /* Position pour rester à gauche */
+  top: 60px; /* Démarre juste en dessous du header */
+  left: 0; /* Colle à gauche */
+}
+
+.sidebar h2 {
+  text-align: center;
+  color: #f1f1f1;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 15px 20px;
+  text-align: left;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+}
+
+.sidebar ul li a:hover {
+  background-color: #575757; /* Couleur au survol */
+  padding-left: 25px;
+  transition: padding-left 0.3s;
+}
+
+/* Le contenu principal doit tenir compte de la sidebar */
+.content {
+  margin-left: 250px; /* Laisse de l'espace pour la sidebar */
+  padding: 20px;
+}

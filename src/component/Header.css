@@ -3,8 +3,16 @@ header {
     top: 0; /* Colle le header au haut de la page */
     left: 0; /* Colle le header au bord gauche de la page */
     width: 100%; /* Fait en sorte que le header prenne toute la largeur de la page */
+    background-color: #000; /* Couleur de fond totalement noir */
     color: white; /* Couleur du texte */
-    padding: 2rem; /* Ajoute un padding autour du contenu du header */
+    justify-content: center;     /* Centre le contenu horizontalement */
+    align-items: center; 
+    padding: 10px 0; /* Réduit le padding vertical pour ne pas trop occuper de place */
     z-index: 1000; /* Assure que le header reste au-dessus des autres éléments */
     text-align: center; /* Centre le contenu du header */
+    display: flex;               
+}
+
+.h1{
+    margin: 0;
 }

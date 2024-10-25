@@ -1,0 +1,11 @@
+.home-container {
+    margin: 20px;
+    display: flex; /* Utilisez flexbox pour l'alignement */
+    flex-direction: column; /* Alignez les éléments verticalement */
+}
+
+.card-container {
+    display: flex; /* Aligne les cartes horizontalement */
+    gap: 20px; /* Espacement entre les cartes */
+    margin-top: 20px; /* Espace au-dessus des cartes */
+}
