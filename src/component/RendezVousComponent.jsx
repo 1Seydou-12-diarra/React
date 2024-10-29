@@ -12,40 +12,45 @@ import './Table.css';
 
 const RendezVousComponent = () => {
     const [rendezvous, setRendezvous] = useState([]);
-    const [patients, setPatients] = useState([]);
-    const [medecins, setMedecins] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [date, setDate] = useState('');
     const [selectedPatient, setSelectedPatient] = useState('');
     const [selectedMedecin, setSelectedMedecin] = useState('');
     const [currentRendezvousId, setCurrentRendezvousId] = useState(null);
-    const [errors, setErrors] = useState({
-        date: '',
-        patient: '',
-        medecin: ''
-    });
+    const [patientsMap, setPatientsMap] = useState({});
+    const [medecinsMap, setMedecinsMap] = useState({});
+    const [errors, setErrors] = useState({ date: '', patient: '', medecin: '' });
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const rendezvousPerPage = 10;
 
     useEffect(() => {
-        // Charger la liste des rendez-vous
         const fetchData = async () => {
             try {
                 const rendezvousResponse = await listeRendezvous();
                 setRendezvous(rendezvousResponse.data);
 
+                // Remplir patientsMap et medecinsMap
                 const patientsResponse = await listePatient();
-                setPatients(patientsResponse.data);
-
                 const medecinsResponse = await listeMedecins();
-                setMedecins(medecinsResponse.data);
+                
+                const patientsMap = {};
+                patientsResponse.data.forEach(patient => {
+                    patientsMap[patient.id] = patient.nom; // Ajustez si nécessaire
+                });
+                setPatientsMap(patientsMap);
+                
+                const medecinsMap = {};
+                medecinsResponse.data.forEach(medecin => {
+                    medecinsMap[medecin.id] = medecin.nom; // Ajustez si nécessaire
+                });
+                setMedecinsMap(medecinsMap);
+
             } catch (error) {
                 console.error("Erreur lors de la récupération des données :", error);
             }
         };
-
         fetchData();
     }, []);
 
@@ -55,7 +60,7 @@ const RendezVousComponent = () => {
         setDate('');
         setSelectedPatient('');
         setSelectedMedecin('');
-        setErrors({ date: '', patient: '', medecin: '' }); // Réinitialiser les erreurs
+        setErrors({ date: '', patient: '', medecin: '' });
     };
 
     const handleShow = () => setShowModal(true);
@@ -66,15 +71,11 @@ const RendezVousComponent = () => {
     const saveRendezvous = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            const rendezvousData = { date, patientId: selectedPatient, medecinId: selectedMedecin };
-
+            const rendezvousData = { date, patient: { id: selectedPatient }, medecin: { id: selectedMedecin } };
             try {
                 if (currentRendezvousId) {
                     await updateRendezVous(currentRendezvousId, rendezvousData);
-                    const updatedRendezvous = rendezvous.map((r) =>
-                        r.id === currentRendezvousId ? { ...r, ...rendezvousData } : r
-                    );
-                    setRendezvous(updatedRendezvous);
+                    setRendezvous(rendezvous.map(r => r.id === currentRendezvousId ? { ...r, ...rendezvousData } : r));
                     setToastMessage('Rendez-vous modifié avec succès !');
                 } else {
                     const response = await ajouterRendezVous(rendezvousData);
@@ -91,25 +92,17 @@ const RendezVousComponent = () => {
 
     function validateForm() {
         let valid = true;
-        const errorsCopy = { ...errors };
-        
-        if (date.trim()) {
-            errorsCopy.date = '';
-        } else {
+        const errorsCopy = { date: '', patient: '', medecin: '' };
+
+        if (!date.trim()) {
             errorsCopy.date = 'La date est requise';
             valid = false;
         }
-
-        if (selectedPatient) {
-            errorsCopy.patient = '';
-        } else {
+        if (!selectedPatient) {
             errorsCopy.patient = 'Le patient est requis';
             valid = false;
         }
-
-        if (selectedMedecin) {
-            errorsCopy.medecin = '';
-        } else {
+        if (!selectedMedecin) {
             errorsCopy.medecin = 'Le médecin est requis';
             valid = false;
         }
@@ -119,13 +112,12 @@ const RendezVousComponent = () => {
 
     const updateRendezvousForm = (rendezvous) => {
         setDate(rendezvous.date);
-        setSelectedPatient(rendezvous.patientId);
-        setSelectedMedecin(rendezvous.medecinId);
+        setSelectedPatient(rendezvous.patient ? rendezvous.patient.id : '');
+        setSelectedMedecin(rendezvous.medecin ? rendezvous.medecin.id : '');
         setCurrentRendezvousId(rendezvous.id);
         setShowModal(true);
     };
 
-    // Pagination logic
     const indexOfLastRendezvous = currentPage * rendezvousPerPage;
     const indexOfFirstRendezvous = indexOfLastRendezvous - rendezvousPerPage;
     const currentRendezvous = rendezvous.slice(indexOfFirstRendezvous, indexOfLastRendezvous);
@@ -141,14 +133,14 @@ const RendezVousComponent = () => {
             </Pagination.Item>
         );
     }
-   
+
     return (
         <div className="table-container">
             <h2>Liste des Rendez-vous</h2>
             <Button variant="primary" className="float-start me-3 mb-3" onClick={handleShow}>
                 Ajouter Un Rendez-vous
             </Button>
-            <Table striped bordered hover variant="gray">
+            <Table striped bordered hover>
                 <thead>
                     <tr>
                         <th>N°</th>
@@ -163,19 +155,18 @@ const RendezVousComponent = () => {
                         <tr key={rendezvous.id}>
                             <td>{index + 1 + indexOfFirstRendezvous}</td>
                             <td>{rendezvous.date}</td>
-                            <td>{patients.find(patient => patient.id === rendezvous.patientId)?.nom || 'Inconnu'}</td>
-                            <td>{medecins.find(medecin => medecin.id === rendezvous.medecinId)?.nom || 'Inconnu'}</td>
+                            <td>{patientsMap[rendezvous.patient.id] || 'Inconnu'}</td>
+                            <td>{medecinsMap[rendezvous.medecin.id] || 'Inconnu'}</td>
                             <td>
-                                <button className='btn btn me-2' onClick={() => updateRendezvousForm(rendezvous)}>
+                                <Button className='btn-primary me-2' onClick={() => updateRendezvousForm(rendezvous)}>
                                     Modifier
-                                </button>
+                                </Button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </Table>
 
-            {/* Pagination alignée à droite */}
             <div className="d-flex justify-content-end">
                 <Pagination>{paginationItems}</Pagination>
             </div>
@@ -185,26 +176,25 @@ const RendezVousComponent = () => {
                     <Modal.Title>{currentRendezvousId ? 'Modifier un Rendez-vous' : 'Ajouter un Rendez-vous'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form >
+                    <Form onSubmit=''>
                         <Form.Group className="mb-3">
                             <Form.Label>Date</Form.Label>
                             <Form.Control
                                 type="date"
                                 value={date}
                                 onChange={handleDateChange}
-                                required
-                                className={`form-control ${errors.date ? 'is-invalid' : ''}`}
+                                className={errors.date ? 'is-invalid' : ''}
                             />
                             {errors.date && <div className='invalid-feedback'>{errors.date}</div>}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
                             <Form.Label>Patient</Form.Label>
-                            <Form.Control as="select" value={selectedPatient} onChange={handlePatientChange} required>
+                            <Form.Control as="select" value={selectedPatient} onChange={handlePatientChange}>
                                 <option value="">Sélectionnez un patient</option>
-                                {patients.map((patient) => (
-                                    <option key={patient.id} value={patient.id}>
-                                        {patient.nom}
+                                {Object.entries(patientsMap).map(([id, nom]) => (
+                                    <option key={id} value={id}>
+                                        {nom}
                                     </option>
                                 ))}
                             </Form.Control>
@@ -213,25 +203,20 @@ const RendezVousComponent = () => {
 
                         <Form.Group className="mb-3">
                             <Form.Label>Médecin</Form.Label>
-                            <Form.Control as="select" value={selectedMedecin} onChange={handleMedecinChange} required>
+                            <Form.Control as="select" value={selectedMedecin} onChange={handleMedecinChange}>
                                 <option value="">Sélectionnez un médecin</option>
-                                {medecins.map((medecin) => (
-                                    <option key={medecin.id} value={medecin.id}>
-                                        {medecin.nom}
+                                {Object.entries(medecinsMap).map(([id, nom]) => (
+                                    <option key={id} value={id}>
+                                        {nom}
                                     </option>
                                 ))}
                             </Form.Control>
                             {errors.medecin && <div className='invalid-feedback'>{errors.medecin}</div>}
                         </Form.Group>
 
-                        <Modal.Footer>
-                            <Button variant="primary" type="submit" onClick={saveRendezvous}>
-                                {currentRendezvousId ? 'Modifier' : 'Ajouter'}
-                            </Button>
-                            <Button variant="secondary" onClick={handleClose}>
-                                Fermer
-                            </Button>
-                        </Modal.Footer>
+                        <Button variant="primary" type="submit" onClick={saveRendezvous}>
+                            {currentRendezvousId ? 'Modifier' : 'Ajouter'}
+                        </Button>
                     </Form>
                 </Modal.Body>
             </Modal>
