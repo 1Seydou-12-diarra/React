@@ -5,3 +5,14 @@
     left: 300px; /* Ajustez cette valeur pour décaler vers la droite */
     transform: translateX(0); /* Aucune translation nécessaire */
 }
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+.toast-container {
+    position: absolute;
+    top: 20px; /* Ajustez la valeur selon vos besoins */
+    right: 20px; /* Ajustez la valeur selon vos besoins */
+    z-index: 1050; /* Assurez-vous que le toast est au-dessus des autres éléments */
+}

@@ -1,18 +1,19 @@
 header {
-    position: fixed; /* Fixe le header en haut de la page */
-    top: 0; /* Colle le header au haut de la page */
-    left: 0; /* Colle le header au bord gauche de la page */
-    width: 100%; /* Fait en sorte que le header prenne toute la largeur de la page */
-    background-color: #000; /* Couleur de fond totalement noir */
-    color: white; /* Couleur du texte */
-    justify-content: center;     /* Centre le contenu horizontalement */
-    align-items: center; 
-    padding: 10px 0; /* Réduit le padding vertical pour ne pas trop occuper de place */
-    z-index: 1000; /* Assure que le header reste au-dessus des autres éléments */
-    text-align: center; /* Centre le contenu du header */
-    display: flex;               
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: whitesmoke;
+    color: white;
+    justify-content: flex-end; /* Change de center à flex-end pour aligner à droite */
+    align-items: center;
+    padding: 10px 0;
+    z-index: 1000;
+   
+    display: flex;
 }
 
-.h1{
+
+.h1 {
     margin: 0;
 }

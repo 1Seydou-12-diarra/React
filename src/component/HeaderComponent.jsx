@@ -10,7 +10,7 @@ export const HeaderComponent = () => {
             <header>
                 <Navbar bg="" data-bs-theme="">
                     <Container>
-                    <h1 >Gestion Des Rendez Vous d'Hopital</h1>
+                   
                     </Container>
                 </Navbar>
             </header>

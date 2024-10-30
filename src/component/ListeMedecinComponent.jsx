@@ -5,34 +5,36 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Toast from 'react-bootstrap/Toast';
+import Pagination from 'react-bootstrap/Pagination';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
-import Pagination from 'react-bootstrap/Pagination';
 import './Table.css';
 
 const ListeMedecinComponent = () => {
-    const [medecin, setMedecin] = useState([]);
+    const [medecins, setMedecins] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [nom, setNom] = useState('');
     const [email, setEmail] = useState('');
     const [specialite, setSpecialite] = useState('');
     const [currentMedecinId, setCurrentMedecinId] = useState(null);
-    const [errors, setErrors] = useState({
-        nom: '',
-        email: '',
-        specialite: ''
-    });
+    const [errors, setErrors] = useState({ nom: '', email: '', specialite: '' });
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const medecinPerPage = 10;
+    const medecinsPerPage = 10;
 
     useEffect(() => {
-        listeMedecins().then((response) => {
-            setMedecin(response.data);
-        }).catch(error => {
-            console.log(error);
-        });
+        const fetchData = async () => {
+            try {
+                const response = await listeMedecins();
+                setMedecins(response.data);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des médecins :", error);
+            }
+        };
+        fetchData();
     }, []);
 
     const handleClose = () => {
@@ -40,7 +42,7 @@ const ListeMedecinComponent = () => {
         setCurrentMedecinId(null);
         setNom('');
         setEmail('');
-        setSpecialite('');
+        setErrors({ nom: '', email: '', specialite: '' });
     };
 
     const handleShow = () => setShowModal(true);
@@ -48,57 +50,42 @@ const ListeMedecinComponent = () => {
     const handleEmailChange = (e) => setEmail(e.target.value);
     const handleSpecialiteChange = (e) => setSpecialite(e.target.value);
 
-    const saveMedecins = (e) => {
+    const saveMedecin = async (e) => {
         e.preventDefault();
         if (validateForm()) {
             const medecinData = { nom, email, specialite };
-
-            if (currentMedecinId) {
-                updateMedecins(currentMedecinId, medecinData)
-                    .then(() => {
-                        const updatedMedecins = medecin.map((m) =>
-                            m.id === currentMedecinId ? { ...m, nom, email, specialite } : m
-                        );
-                        setMedecin(updatedMedecins);
-                        setToastMessage('Médecin modifié avec succès !');
-                        setShowToast(true);
-                        handleClose();
-                    })
-                    .catch(error => console.error('Erreur lors de la mise à jour :', error));
-            } else {
-                ajouterMedecins(medecinData)
-                    .then((response) => {
-                        setMedecin([...medecin, response.data]);
-                        setToastMessage('Médecin ajouté avec succès !');
-                        setShowToast(true);
-                        handleClose();
-                    })
-                    .catch(error => console.error('Erreur lors de l\'ajout du médecin :', error));
+            try {
+                if (currentMedecinId) {
+                    await updateMedecins(currentMedecinId, medecinData);
+                    setMedecins(medecins.map(m => m.id === currentMedecinId ? { ...m, ...medecinData } : m));
+                    setToastMessage('Médecin modifié avec succès !');
+                } else {
+                    const response = await ajouterMedecins(medecinData);
+                    setMedecins([...medecins, response.data]);
+                    setToastMessage('Médecin ajouté avec succès !');
+                }
+                setShowToast(true);
+                handleClose();
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout ou de la mise à jour du médecin :', error);
             }
         }
     };
 
     function validateForm() {
         let valid = true;
-        const errorsCopy = { ...errors };
-        if (nom.trim()) {
-            errorsCopy.nom = '';
-        } else {
+        const errorsCopy = { nom: '', email: '', specialite: '' };
+
+        if (!nom.trim()) {
             errorsCopy.nom = 'Le nom est requis';
             valid = false;
         }
-
-        if (email.trim()) {
-            errorsCopy.email = '';
-        } else {
+        if (!email.trim()) {
             errorsCopy.email = 'L\'email est requis';
             valid = false;
         }
-
-        if (specialite.trim()) {
-            errorsCopy.specialite = '';
-        } else {
-            errorsCopy.specialite = 'La spécialité est requise';
+        if (!specialite.trim()) {
+            errorsCopy.specialite = 'specialite est requis';
             valid = false;
         }
         setErrors(errorsCopy);
@@ -113,53 +100,39 @@ const ListeMedecinComponent = () => {
         setShowModal(true);
     };
 
-    const pageTitle = () => {
-        return currentMedecinId ? <h2 className='text-center'>Modifier un médecin</h2> : <h2 className='text-center'>Ajouter un médecin</h2>;
-    };
-
-    // Pagination logic
-    const indexOfLastMedecin = currentPage * medecinPerPage;
-    const indexOfFirstMedecin = indexOfLastMedecin - medecinPerPage;
-    const currentMedecins = medecin.slice(indexOfFirstMedecin, indexOfLastMedecin);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    const totalPages = Math.ceil(medecin.length / medecinPerPage);
-    const paginationItems = [];
-    for (let number = 1; number <= totalPages; number++) {
-        paginationItems.push(
-            <Pagination.Item key={number} active={number === currentPage} onClick={() => paginate(number)}>
-                {number}
-            </Pagination.Item>
-        );
-    }
+    const indexOfLastMedecin = currentPage * medecinsPerPage;
+    const indexOfFirstMedecin = indexOfLastMedecin - medecinsPerPage;
+    const currentMedecins = medecins.slice(indexOfFirstMedecin, indexOfLastMedecin);
 
     return (
         <div className="table-container">
             <h2>Liste des Médecins</h2>
-            <Button variant="primary" className="float-start me-3 mb-3" onClick={handleShow}>
-                Ajouter Un Médecin
-            </Button>
+            <Row className="align-items-center mb-3">
+                <Col xs="auto">
+                    <Button variant="primary" onClick={handleShow}>
+                        Ajouter Un Médecin
+                    </Button>
+                </Col>
+            </Row>
+
             <Table striped bordered hover variant="gray">
                 <thead>
                     <tr>
-                        <th>N°</th>
                         <th>Nom</th>
                         <th>Email</th>
-                        <th>Spécialité</th>
+                        <th>Specialité</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {currentMedecins.map((medecin, index) => (
+                    {currentMedecins.map((medecin) => (
                         <tr key={medecin.id}>
-                            <td>{index + 1 + indexOfFirstMedecin}</td>
                             <td>{medecin.nom}</td>
                             <td>{medecin.email}</td>
                             <td>{medecin.specialite}</td>
                             <td>
-                                <button className='btn btn me-2' onClick={() => updateMedecinForm(medecin)}>
-                                    <FontAwesomeIcon icon={faEdit} className='me-1' />
+                                <button className="btn btn me-2" onClick={() => updateMedecinForm(medecin)}>
+                                    <FontAwesomeIcon icon={faEdit} />
                                 </button>
                             </td>
                         </tr>
@@ -167,14 +140,19 @@ const ListeMedecinComponent = () => {
                 </tbody>
             </Table>
 
-            {/* Pagination alignée à droite */}
-            <div className="d-flex justify-content-end">
-                <Pagination>{paginationItems}</Pagination>
-            </div>
-            <br /><br />
-            <Modal show={showModal} onHide={handleClose}>
+            {/* Pagination au centre en bas */}
+            <Row className="justify-content-center">
+                <Col xs="auto">
+                    <Pagination>
+                        <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+                        <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={indexOfLastMedecin >= medecins.length} />
+                    </Pagination>
+                </Col>
+            </Row>
+
+            <Modal show={showModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{pageTitle()}</Modal.Title>
+                    <Modal.Title>Médecin</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
@@ -182,71 +160,42 @@ const ListeMedecinComponent = () => {
                             <Form.Label>Nom</Form.Label>
                             <Form.Control
                                 type="text"
-                                placeholder="Entrez le nom"
                                 value={nom}
                                 onChange={handleNomChange}
-                                required
-                                className={`form-control ${errors.nom ? 'is-invalid' : ''}`}
+                                isInvalid={errors.nom}
                             />
+                            <Form.Control.Feedback type="invalid">{errors.nom}</Form.Control.Feedback>
                         </Form.Group>
-                        {errors.nom && <div className='invalid-feedback'>{errors.nom}</div>}
-
                         <Form.Group className="mb-3">
                             <Form.Label>Email</Form.Label>
                             <Form.Control
                                 type="email"
-                                placeholder="Entrez l'email"
                                 value={email}
                                 onChange={handleEmailChange}
-                                required
-                                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                isInvalid={errors.email}
                             />
-                            {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
+                            <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                         </Form.Group>
-                        {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Spécialité</Form.Label>
+                            <Form.Label>Specialité</Form.Label>
                             <Form.Control
                                 type="text"
-                                placeholder="Entrez la spécialité"
                                 value={specialite}
                                 onChange={handleSpecialiteChange}
-                                required
-                                className={`form-control ${errors.specialite ? 'is-invalid' : ''}`}
+                                isInvalid={errors.specialite}
                             />
-
+                            <Form.Control.Feedback type="invalid">{errors.specialite}</Form.Control.Feedback>
                         </Form.Group>
-                        {errors.specialite && <div className='invalid-feedback'>{errors.specialite}</div>}
-                        {/* <Button variant="primary" onClick={saveMedecins}>
-                            Enregistrer
-                        </Button> */}
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="primary" type="submit" onClick={saveMedecins}>
-                        {currentMedecinId ? 'Modifier' : 'Sauvegarder'}
-                    </Button>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Fermer
-                    </Button>
+                    <Button variant="primary" onClick={saveMedecin}>Sauvegarder</Button>
+                    <Button variant="secondary" onClick={handleClose}>Annuler</Button>
                 </Modal.Footer>
             </Modal>
 
-            {/* Toast pour les notifications */}
-            <Toast
-                onClose={() => setShowToast(false)}
-                show={showToast}
-                delay={2000}
-                autohide
-                style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    backgroundColor: '#90ee90',
-                    color: 'black'
-                }}
-            >
+            <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="success">
                 <Toast.Body>{toastMessage}</Toast.Body>
             </Toast>
         </div>

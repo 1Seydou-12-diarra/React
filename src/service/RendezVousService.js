@@ -19,6 +19,11 @@ export const updateRendezVous = (id, rendezvous) => {
     return axios.put(`${REST_API_BASE_URL}/${id}`, rendezvous); // Met à jour le patient avec l'ID donné
 };
 
+
+// export const updatePatients = (id, patient) => {
+//     return axios.put(`${REST_API_BASE}/${id}`, patient); // Met à jour le patient avec l'ID donné
+// };
+
 // Fonction pour supprimer un patient
 // export const deletePatient = (id) => {
 //     return axios.delete(`${REST_API_BASE}/${id}`); // Supprime le patient avec l'ID donné

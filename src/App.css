@@ -7,7 +7,7 @@ body {
 
 #root {
   width: 100%;
-  height: 100vh;
+  height: 107vh;
   /* 100% de la hauteur de la fenêtre */
   margin: 0;
   padding: 5%;
@@ -15,17 +15,25 @@ body {
   text-align: center;
   box-sizing: border-box;
   /* Pour inclure le padding dans la taille totale */
+  background-color: #f0f0f0e6;
+
 }
-/* Sidebar.css */
+
 .sidebar {
-  height: calc(100vh - 60px); /* Ajuste la hauteur pour prendre en compte le header */
-  width: 250px;  /* Largeur de la sidebar */
-  background-color: #000; /* Couleur de fond totalement noir */
+  height: calc(106vh - 60px);
+  /* Ajuste la hauteur pour prendre en compte le header */
+  width: 250px;
+  /* Largeur de la sidebar */
+  background-color: #001f3f;
+  /* Couleur de fond totalement noir */
   padding-top: 20px;
   color: white;
-  position: absolute; /* Position pour rester à gauche */
-  top: 60px; /* Démarre juste en dessous du header */
-  left: 0; /* Colle à gauche */
+  position: absolute;
+  /* Position pour rester à gauche */
+  top: 0px;
+  /* Démarre juste en dessous du header */
+  left: 0;
+  /* Colle à gauche */
 }
 
 .sidebar h2 {
@@ -50,13 +58,27 @@ body {
 }
 
 .sidebar ul li a:hover {
-  background-color: #575757; /* Couleur au survol */
+
+  /* Couleur au survol */
   padding-left: 25px;
   transition: padding-left 0.3s;
 }
 
 /* Le contenu principal doit tenir compte de la sidebar */
 .content {
-  margin-left: 250px; /* Laisse de l'espace pour la sidebar */
+  margin-left: 250px;
+  /* Laisse de l'espace pour la sidebar */
   padding: 20px;
+}
+
+.sidebar-logo {
+
+  top: 0;
+  width: 100%;
+  /* Vous pouvez ajuster la taille selon vos besoins */
+  max-width: 100px;
+  /* Limite la largeur maximale */
+  margin-bottom: 10px;
+  /* Espace en dessous de l'image */
+
 }

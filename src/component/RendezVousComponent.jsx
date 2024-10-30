@@ -8,6 +8,10 @@ import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Toast from 'react-bootstrap/Toast';
 import Pagination from 'react-bootstrap/Pagination';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import './Table.css';
 
 const RendezVousComponent = () => {
@@ -31,19 +35,18 @@ const RendezVousComponent = () => {
                 const rendezvousResponse = await listeRendezvous();
                 setRendezvous(rendezvousResponse.data);
 
-                // Remplir patientsMap et medecinsMap
                 const patientsResponse = await listePatient();
                 const medecinsResponse = await listeMedecins();
-                
+
                 const patientsMap = {};
                 patientsResponse.data.forEach(patient => {
-                    patientsMap[patient.id] = patient.nom; // Ajustez si nécessaire
+                    patientsMap[patient.id] = patient.nom;
                 });
                 setPatientsMap(patientsMap);
-                
+
                 const medecinsMap = {};
                 medecinsResponse.data.forEach(medecin => {
-                    medecinsMap[medecin.id] = medecin.nom; // Ajustez si nécessaire
+                    medecinsMap[medecin.id] = medecin.nom;
                 });
                 setMedecinsMap(medecinsMap);
 
@@ -74,7 +77,7 @@ const RendezVousComponent = () => {
             const rendezvousData = { date, patient: { id: selectedPatient }, medecin: { id: selectedMedecin } };
             try {
                 if (currentRendezvousId) {
-                    await updateRendezVous(currentRendezvousId, rendezvousData);
+                    updateRendezVous(currentRendezvousId, rendezvousData);
                     setRendezvous(rendezvous.map(r => r.id === currentRendezvousId ? { ...r, ...rendezvousData } : r));
                     setToastMessage('Rendez-vous modifié avec succès !');
                 } else {
@@ -85,7 +88,7 @@ const RendezVousComponent = () => {
                 setShowToast(true);
                 handleClose();
             } catch (error) {
-                console.error('Erreur lors de l\'ajout ou de la mise à jour du rendez-vous :', error);
+                console.error('Erreur lors de l\'ajout ou de la mise à jour du rendez-vous :', error.response?.data || error.message);
             }
         }
     };
@@ -122,28 +125,27 @@ const RendezVousComponent = () => {
     const indexOfFirstRendezvous = indexOfLastRendezvous - rendezvousPerPage;
     const currentRendezvous = rendezvous.slice(indexOfFirstRendezvous, indexOfLastRendezvous);
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    const totalPages = Math.ceil(rendezvous.length / rendezvousPerPage);
-    const paginationItems = [];
-    for (let number = 1; number <= totalPages; number++) {
-        paginationItems.push(
-            <Pagination.Item key={number} active={number === currentPage} onClick={() => paginate(number)}>
-                {number}
-            </Pagination.Item>
-        );
-    }
-
     return (
         <div className="table-container">
             <h2>Liste des Rendez-vous</h2>
-            <Button variant="primary" className="float-start me-3 mb-3" onClick={handleShow}>
-                Ajouter Un Rendez-vous
-            </Button>
-            <Table striped bordered hover>
+            <Row className="align-items-center mb-3">
+                <Col xs="auto">
+                    <Button variant="primary" onClick={handleShow}>
+                        Ajouter Un Rendez-vous
+                    </Button>
+                </Col>
+            </Row>
+
+            {/* Conteneur pour le toast */}
+            <div className="toast-container">
+                <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="success">
+                    <Toast.Body>{toastMessage}</Toast.Body>
+                </Toast>
+            </div>
+
+            <Table striped bordered hover variant="gray">
                 <thead>
                     <tr>
-                        <th>N°</th>
                         <th>Date</th>
                         <th>Patient</th>
                         <th>Médecin</th>
@@ -151,79 +153,76 @@ const RendezVousComponent = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {currentRendezvous.map((rendezvous, index) => (
-                        <tr key={rendezvous.id}>
-                            <td>{index + 1 + indexOfFirstRendezvous}</td>
-                            <td>{rendezvous.date}</td>
-                            <td>{patientsMap[rendezvous.patient.id] || 'Inconnu'}</td>
-                            <td>{medecinsMap[rendezvous.medecin.id] || 'Inconnu'}</td>
+                    {currentRendezvous.map((rdv) => (
+                        <tr key={rdv.id}>
+                            <td>{rdv.date}</td>
+                            <td>{patientsMap[rdv.patient.id]}</td>
+                            <td>{medecinsMap[rdv.medecin.id]}</td>
                             <td>
-                                <Button className='btn-primary me-2' onClick={() => updateRendezvousForm(rendezvous)}>
-                                    Modifier
-                                </Button>
+                                <button className="btn btn me-2" onClick={() => updateRendezvousForm(rdv)}>
+                                    <FontAwesomeIcon icon={faEdit} />
+                                </button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </Table>
 
-            <div className="d-flex justify-content-end">
-                <Pagination>{paginationItems}</Pagination>
-            </div>
+            {/* Pagination au centre en bas */}
+            <Row className="justify-content-center">
+                <Col xs="auto">
+                    <Pagination>
+                        <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+                        <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={indexOfLastRendezvous >= rendezvous.length} />
+                    </Pagination>
+                </Col>
+            </Row>
 
-            <Modal show={showModal} onHide={handleClose}>
+            <Modal show={showModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{currentRendezvousId ? 'Modifier un Rendez-vous' : 'Ajouter un Rendez-vous'}</Modal.Title>
+                    <Modal.Title>Rendez-vous</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form onSubmit=''>
+                    <Form>
                         <Form.Group className="mb-3">
                             <Form.Label>Date</Form.Label>
                             <Form.Control
                                 type="date"
                                 value={date}
                                 onChange={handleDateChange}
-                                className={errors.date ? 'is-invalid' : ''}
+                                isInvalid={!!errors.date}
                             />
-                            {errors.date && <div className='invalid-feedback'>{errors.date}</div>}
+                            <Form.Control.Feedback type="invalid">{errors.date}</Form.Control.Feedback>
                         </Form.Group>
-
                         <Form.Group className="mb-3">
                             <Form.Label>Patient</Form.Label>
-                            <Form.Control as="select" value={selectedPatient} onChange={handlePatientChange}>
+                            <Form.Select value={selectedPatient} onChange={handlePatientChange} isInvalid={!!errors.patient}>
                                 <option value="">Sélectionnez un patient</option>
-                                {Object.entries(patientsMap).map(([id, nom]) => (
-                                    <option key={id} value={id}>
-                                        {nom}
-                                    </option>
+                                {Object.entries(patientsMap).map(([id, name]) => (
+                                    <option key={id} value={id}>{name}</option>
                                 ))}
-                            </Form.Control>
-                            {errors.patient && <div className='invalid-feedback'>{errors.patient}</div>}
+                            </Form.Select>
+                            <Form.Control.Feedback type="invalid">{errors.patient}</Form.Control.Feedback>
                         </Form.Group>
-
                         <Form.Group className="mb-3">
                             <Form.Label>Médecin</Form.Label>
-                            <Form.Control as="select" value={selectedMedecin} onChange={handleMedecinChange}>
+                            <Form.Select value={selectedMedecin} onChange={handleMedecinChange} isInvalid={!!errors.medecin}>
                                 <option value="">Sélectionnez un médecin</option>
-                                {Object.entries(medecinsMap).map(([id, nom]) => (
-                                    <option key={id} value={id}>
-                                        {nom}
-                                    </option>
+                                {Object.entries(medecinsMap).map(([id, name]) => (
+                                    <option key={id} value={id}>{name}</option>
                                 ))}
-                            </Form.Control>
-                            {errors.medecin && <div className='invalid-feedback'>{errors.medecin}</div>}
+                            </Form.Select>
+                            <Form.Control.Feedback type="invalid">{errors.medecin}</Form.Control.Feedback>
                         </Form.Group>
-
-                        <Button variant="primary" type="submit" onClick={saveRendezvous}>
-                            {currentRendezvousId ? 'Modifier' : 'Ajouter'}
-                        </Button>
                     </Form>
                 </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" onClick={saveRendezvous}>
+                        {currentRendezvousId ? 'Modifier' : 'Sauvegarder'}
+                    </Button>
+                    <Button variant="secondary" onClick={handleClose}>Annuler</Button>
+                </Modal.Footer>
             </Modal>
-
-            <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>
-                <Toast.Body>{toastMessage}</Toast.Body>
-            </Toast>
         </div>
     );
 };
